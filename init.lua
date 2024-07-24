@@ -1,5 +1,4 @@
 --[[
-
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
@@ -91,7 +90,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -102,7 +101,8 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+--  NOTE: Ross - changed to enable relative numbers
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -152,7 +152,8 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+-- NOTE: Ross - changed from 10
+vim.opt.scrolloff = 15
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -161,8 +162,13 @@ vim.opt.scrolloff = 10
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- Set write to <leader> w
+vim.keymap.set('n', '<leader>w', ':write<CR>', { desc = '[W]rite File' })
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '[d', vim.diagnostic.goto_next, { desc = 'Go to previous [D]iagnostic message' })
+vim.keymap.set('n', ']d', vim.diagnostic.goto_prev, { desc = 'Go to next [D]iagnostic message' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -181,8 +187,11 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
+-- NOTE: Ross - I'm changing this for arrow keys for colemakdh reasons
+-- TODO: Need to test all window actions once done looking through the config
+--
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+vim.keymap.set('n', '<C-<left>>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
@@ -253,6 +262,132 @@ require('lazy').setup({
     },
   },
 
+  -- NOTE: Ross - added nvimtree to the plugins to use as file explorer
+  {
+    'nvim-tree/nvim-tree.lua',
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      local nvimtree = require 'nvim-tree'
+
+      -- recommended settings from nvim-tree documentation
+      vim.g.loaded_netrw = 1
+      vim.g.loaded_netrwPlugin = 1
+
+      nvimtree.setup {
+        view = {
+          width = 35,
+          relativenumber = true,
+        },
+        -- change folder arrow icons
+        renderer = {
+          indent_markers = {
+            enable = true,
+          },
+          icons = {
+            glyphs = {
+              folder = {
+                arrow_closed = '', -- arrow when folder is closed
+                arrow_open = '', -- arrow when folder is open
+              },
+            },
+          },
+        },
+        -- disable window_picker for
+        -- explorer to work well with
+        -- window splits
+        actions = {
+          open_file = {
+            window_picker = {
+              enable = false,
+            },
+          },
+        },
+        filters = {
+          custom = { '.DS_Store' },
+        },
+        git = {
+          ignore = false,
+        },
+      }
+
+      -- set keymaps
+      local keymap = vim.keymap -- for conciseness
+
+      keymap.set('n', '<leader>ee', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle file explorer' }) -- toggle file explorer
+      keymap.set('n', '<leader>ef', '<cmd>NvimTreeFindFileToggle<CR>', { desc = 'Toggle file explorer on current file' }) -- toggle file explorer on current file
+      keymap.set('n', '<leader>ec', '<cmd>NvimTreeCollapse<CR>', { desc = 'Collapse file explorer' }) -- collapse file explorer
+      keymap.set('n', '<leader>er', '<cmd>NvimTreeRefresh<CR>', { desc = 'Refresh file explorer' }) -- refresh file explorer
+    end,
+  },
+
+  -- NOTE: Ross - install vscode theme here
+  {
+    'Mofiqul/vscode.nvim',
+    event = 'VimEnter',
+    priority = 1000, -- Make sure to load this before all the other start plugins.
+    config = function()
+      local c = require('vscode.colors').get_colors()
+
+      require('vscode').setup {
+        -- Alternatively set style in setup
+        -- style = 'light'
+
+        -- Enable transparent background
+        transparent = false,
+
+        -- Enable italic comment
+        italic_comments = true,
+
+        -- Underline `@markup.link.*` variants
+        underline_links = true,
+
+        -- Disable nvim-tree background color
+        disable_nvimtree_bg = true,
+
+        -- Override colors (see ./lua/vscode/colors.lua)
+        color_overrides = {
+          --vscLineNumber = '#FFFFFF',
+        },
+
+        -- Override highlight groups (see ./lua/vscode/theme.lua)
+        group_overrides = {
+          -- this supports the same val table as vim.api.nvim_set_hl
+          -- use colors from this colorscheme by requiring vscode.colors!
+          Cursor = { fg = c.vscDarkBlue, bg = c.vscLightGreen, bold = true },
+        },
+      }
+      vim.cmd.colorscheme 'vscode'
+    end,
+  },
+  {
+    'pmizio/typescript-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+    opts = {},
+  },
+
+  -- NOTE: Ross added - for more vscode like colored brackets
+  {
+    'hiphish/rainbow-delimiters.nvim',
+  },
+
+  -- NOTE: Ross added - toggleterm
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function() -- This is the function that runs, AFTER loading
+      require('toggleterm').setup {
+        direction = 'float',
+      }
+
+      local keymap = vim.keymap -- for conciseness
+
+      keymap.set('n', '<F2>', '<cmd>1ToggleTerm<CR>', { desc = 'Toggle terminal' }) -- toggle terminal 1
+      keymap.set('t', '<F2>', '<cmd>1ToggleTerm<CR>', { desc = 'Toggle terminal' }) -- toggle terminal 1
+      keymap.set('n', '<F3>', '<cmd>2ToggleTerm<CR>', { desc = 'Toggle terminal 2' }) -- toggle terminal 1
+      keymap.set('t', '<F3>', '<cmd>2ToggleTerm<CR>', { desc = 'Toggle terminal 2' }) -- toggle terminal 1
+    end,
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -280,9 +415,10 @@ require('lazy').setup({
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
-        { '<leader>w', group = '[W]orkspace' },
-        { '<leader>t', group = '[T]oggle' },
+        { '<leader>W', group = '[W]orkspace' },
+        { '<leader>T', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>e', group = 'Tree [E]xplorer' },
       }
     end,
   },
@@ -381,7 +517,7 @@ require('lazy').setup({
           winblend = 10,
           previewer = false,
         })
-      end, { desc = '[/] Fuzzily search in current buffer' })
+      end, { desc = 'Fuzzy search buffer' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -490,7 +626,7 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<leader>Ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
@@ -538,7 +674,7 @@ require('lazy').setup({
           --
           -- This may be unwanted, since they displace some of your code
           if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
-            map('<leader>th', function()
+            map('<leader>Th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
           end
@@ -572,7 +708,15 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        -- tsserver = {},
+        tsserver = {},
+        tailwindcss = {},
+        html = {},
+        emmet_ls = {},
+        cssls = {},
+        stylelint_lsp = {},
+        eslint = {},
+        -- prettier = {},
+
         --
 
         lua_ls = {
@@ -655,7 +799,7 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettierd', 'prettier' } },
       },
     },
   },
@@ -727,11 +871,11 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          -- ['<C-y>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
-          --['<CR>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm { select = true },
           --['<Tab>'] = cmp.mapping.select_next_item(),
           --['<S-Tab>'] = cmp.mapping.select_prev_item(),
 
@@ -787,10 +931,10 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      --vim.cmd.colorscheme 'tokyonight-night'
 
       -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+      --vim.cmd.hi 'Comment gui=none'
     end,
   },
 
