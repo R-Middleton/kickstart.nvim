@@ -92,8 +92,8 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 
 -- NOTE: Ross adding shiftwidth here to test go fmt formatting to 2 tab_spaces
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
+-- vim.opt.tabstop = 8
+-- vim.opt.shiftwidth = 4
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -176,7 +176,56 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
 
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  {
+    'Darazaki/indent-o-matic',
+    config = function()
+      require('indent-o-matic').setup {
+        -- Global settings, used as a fallback
+        max_lines = 2048,
+        standard_widths = { 2 },
+
+        -- Disable indent-o-matic for LISP files
+        filetype_lisp = {
+          max_lines = 0,
+        },
+
+        -- Only detect 4 spaces and tabs for Rust files
+        filetype_go = {
+          standard_widths = { 4 },
+        },
+
+        -- Don't detect 8 spaces indentations inside files without a filetype
+        filetype_ = {
+          standard_widths = { 2, 4 },
+        },
+
+        -- bunch of react & ts explicit sets to get over some funkiness i'm experiencing
+        filetype_typescript = {
+          standard_widths = { 2 },
+        },
+
+        filetype_typescriptreact = {
+          standard_widths = { 2 },
+        },
+
+        filetype_javascriptreact = {
+          standard_widths = { 2 },
+        },
+
+        filetype_typescript = {
+          standard_widths = { 2 },
+        },
+      }
+    end,
+  },
+
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+    -- use opts = {} for passing setup options
+    -- this is equalent to setup({}) function
+  },
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -649,7 +698,8 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {},
+        -- tsserver = {},
+        vtsls = {},
         tailwindcss = {},
         html = {},
         emmet_ls = {},
@@ -879,6 +929,25 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'yioneko/nvim-vtsls',
+    config = function()
+      require('vtsls').config {
+        settings = {
+          typescript = {
+            inlayHints = {
+              parameterNames = { enabled = 'literals' },
+              parameterTypes = { enabled = true },
+              variableTypes = { enabled = true },
+              propertyDeclarationTypes = { enabled = true },
+              functionLikeReturnTypes = { enabled = true },
+              enumMemberValues = { enabled = true },
+            },
+          },
+        },
+      }
+    end,
+  },
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
