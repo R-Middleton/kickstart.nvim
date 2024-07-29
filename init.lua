@@ -92,8 +92,9 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 
 -- NOTE: Ross adding shiftwidth here to test go fmt formatting to 2 tab_spaces
--- vim.opt.tabstop = 8
--- vim.opt.shiftwidth = 4
+vim.opt.tabstop = 8
+vim.opt.shiftwidth = 2
+vim.opt.softtabstop = 2
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -212,7 +213,7 @@ require('lazy').setup({
           standard_widths = { 2 },
         },
 
-        filetype_typescript = {
+        filetype_javascript = {
           standard_widths = { 2 },
         },
       }
